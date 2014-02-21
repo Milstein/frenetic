@@ -150,13 +150,16 @@ let arbitrary_policy = gen_pol gen_atom_pol
 let arbitrary_lf_pol = gen_pol gen_lf_atom_pol
 
 let arbitrary_packet : packet QuickCheck_gen.gen = 
-  QuickCheck_gen.Gen 
-    (fun _ -> failwith "arbitrary_packet: not yet implemented")    
-  (* let open QuickCheck_gen in *)
-  (* let open QuickCheck in *)
-  (* listN num_hdrs arbitrary_headerval >>= fun vals -> *)
-  (*   Arbitrary_SDN_Types.arbitrary_payload >>= fun payload -> *)
-  (*   ret_gen { *)
-  (*     headers = List.fold_right2 HeaderMap.add all_headers vals HeaderMap.empty; *)
-  (*     payload = payload *)
-  (*   } *)
+  let arbitrary_headerval =
+    let open QuickCheck_gen in
+    oneof [map_gen (fun i -> IPProto i) AB.arbitrary_uint8] in
+  let open QuickCheck_gen in
+  let open QuickCheck in
+  let num_hdrs = 3 in
+  listN num_hdrs arbitrary_headerval >>= fun vals ->
+    Arbitrary_SDN_Types.arbitrary_payload >>= fun payload ->
+      ret_gen {
+        switch = 0L;
+        headers = Headers.empty;
+        payload = payload
+      }
